@@ -19,6 +19,9 @@ public class Configurations {
     @Value("${certificate-type}")
     private String certificateType;
 
+    @Value("${expiration-period}")
+    private Integer expirationPeriod;
+
     @Value("${issuer}")
     private String issuer;
 
@@ -44,6 +47,10 @@ public class Configurations {
 
     public String getCertificateType() {
         return certificateType;
+    }
+
+    public Integer getExpirationPeriod() {
+        return expirationPeriod;
     }
 
     public String getIssuer() {

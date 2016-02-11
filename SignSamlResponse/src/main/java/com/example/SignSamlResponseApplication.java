@@ -39,11 +39,13 @@ public class SignSamlResponseApplication implements CommandLineRunner {
 	}
 
 	public static void main(String[] args) {
-		SpringApplication.run(SignSamlResponseApplication.class, args);
 		if (args.length < 2) {
 			System.out.println("\r\nusage:\r\njava -jar " + SignSamlResponse.class.getSimpleName() + ".jar --s4-user-id=<s4-user-id> --s4-org-private-id=<s4_org_private_id>");
 			System.out.println("java -jar " + SignSamlResponse.class.getSimpleName() + ".jar --s4-user-id=<s4-user-id> --s4-org-private-id=<s4_org_private_id> --certificate-file=../cert/bp-test.p12 --certificate-password=<password> --certificate-type=pkcs12");
-			System.out.println("other parameters: --issuer; --consumer; --attribute-name");
+			System.out.println("other parameters: --expiration-period; --issuer; --consumer; --attribute-name");
+			return;
 		}
+		SpringApplication.run(SignSamlResponseApplication.class, args);
+
 	}
 }

@@ -101,7 +101,7 @@ public class SignSamlResponse {
         SubjectConfirmationData scData = scDataBuilder.buildObject();
         scData.setRecipient(configurations.getConsumer());
         Calendar cal = Calendar.getInstance();
-        cal.add(12, 30);
+        cal.add(Calendar.DAY_OF_MONTH, configurations.getExpirationPeriod());
         scData.setNotOnOrAfter(new DateTime(cal.getTime().getTime()));
         subjectConfirmation.setSubjectConfirmationData(scData);
         subject.getSubjectConfirmations().add(subjectConfirmation);
@@ -155,7 +155,7 @@ public class SignSamlResponse {
         Response response = responseBuilder.buildObject();
 
         response.getAssertions().add(assertion);
-        response.setID(assertion.getID());
+        response.setID(UUID.randomUUID().toString());
         response.setIssueInstant(new DateTime(new Date()));
         response.setVersion(SAMLVersion.VERSION_20);
 
