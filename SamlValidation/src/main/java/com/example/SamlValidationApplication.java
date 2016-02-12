@@ -26,9 +26,7 @@ public class SamlValidationApplication implements CommandLineRunner {
 
     public static void main(String[] args) {
         if (args.length < 1) {
-            System.out.println("\r\nusage:\r\njava -jar " + SamlValidation.class.getSimpleName() + ".jar --saml-response-file=<path_to_base64_url_encripted_saml_response>");
-            System.out.println("java -jar " + SamlValidation.class.getSimpleName() + ".jar --saml-response-file=../ioFiles/exampleSamlResponse.base64 --public-certificate-file=../cert/bp-test.crt");
-            System.out.println("other parameters: --certificate-type=cert");
+            System.out.println("\r\nusage:\r\njava -jar " + SamlValidation.class.getSimpleName() + ".jar --saml-response-file=../ioFiles/exampleSamlResponse.base64 --public-certificate-file=../cert/bp-test.crt");
             return;
         }
         SpringApplication.run(SamlValidationApplication.class, args);

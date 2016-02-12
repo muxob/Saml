@@ -16,18 +16,11 @@ public class Configurations {
     @Value("${public-certificate-file}")
     private String publicCertificateFile;
 
-    @Value("${certificate-type}")
-    private String certificateType;
-
     public String getSamlResponseFile() {
         return samlResponseFile;
     }
 
     public String getPublicCertificateFile() {
         return publicCertificateFile;
-    }
-
-    public String getCertificateType() {
-        return certificateType;
     }
 }

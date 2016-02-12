@@ -36,8 +36,7 @@ import java.io.*;
 import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.*;
@@ -84,6 +83,23 @@ public class SamlValidation {
         }
     }
 
+    private BasicX509Credential getCredential() throws SamlException {
+        X509Certificate certificate;
+        BasicX509Credential credential = new BasicX509Credential();
+        File file = new File(configurations.getPublicCertificateFile());
+
+        try (InputStream in = new FileInputStream(file)) {
+            certificate = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(in);
+        } catch (CertificateException e) {
+            throw new SamlException(e);
+        } catch (IOException e) {
+            throw new SamlException(e);
+        }
+        credential.setEntityCertificate(certificate);
+        credential.setPublicKey(certificate.getPublicKey());
+        return credential;
+    }
+
     private Response getValidResponse(Document samlDocument, BasicX509Credential credential) throws SamlException {
         Element responseElement = samlDocument.getDocumentElement();
         UnmarshallerFactory unmarshallerFactory = Configuration.getUnmarshallerFactory();
@@ -115,55 +131,6 @@ public class SamlValidation {
         }
 
         return  response;
-    }
-
-    private KeyStore getKeyStore() throws SamlException {
-        KeyStore keyStore;
-        File file = new File(configurations.getPublicCertificateFile());
-
-        try {
-            InputStream in = new FileInputStream(file);
-
-            try {
-                X509Certificate certificate = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(in);
-                keyStore = KeyStore.getInstance("JKS");
-                keyStore.load(null, null);
-                keyStore.setCertificateEntry(configurations.getCertificateType(), certificate);
-            } catch (Exception e) {
-                throw new SamlException(e);
-            } finally {
-                in.close();
-            }
-        } catch (IOException e) {
-            throw new SamlException(e);
-        }
-
-        return keyStore;
-    }
-
-    private BasicX509Credential getCredential() throws SamlException {
-        BasicX509Credential cred = null;
-        KeyStore keyStore = getKeyStore();
-
-        try {
-            Enumeration aliases = keyStore.aliases();
-            while (aliases.hasMoreElements()) {
-                String alias = (String) aliases.nextElement();
-                X509Certificate cert = (X509Certificate) keyStore.getCertificate(alias);
-                if(cert != null) {
-                    cred = new BasicX509Credential();
-                    cred.setEntityCertificate(cert);
-                    cred.setPublicKey(cert.getPublicKey());
-                }
-            }
-        } catch (KeyStoreException e) {
-            throw new SamlException(e);
-        }
-
-        if (cred == null) {
-            throw new SamlException("No certificate in the keystore");
-        }
-        return cred;
     }
 
     private String getValidUserID(Assertion assertion, BasicX509Credential credential) throws SamlException {
@@ -234,40 +201,38 @@ public class SamlValidation {
         if(confirmations == null) {
             return true;
         } else {
-            Iterator i$ = confirmations.iterator();
+            Iterator iterator = confirmations.iterator();
 
             while(true) {
-                while(true) {
-                    SubjectConfirmationData data;
-                    do {
-                        if(!i$.hasNext()) {
-                            return ret;
-                        }
-
-                        SubjectConfirmation confirmation = (SubjectConfirmation)i$.next();
-                        data = confirmation.getSubjectConfirmationData();
-                    } while(data == null);
-
-                    DateTime notOnOrAfter;
-                    long time;
-                    long currentTime;
-                    if(data.getNotBefore() != null) {
-                        notOnOrAfter = data.getNotBefore();
-                        time = notOnOrAfter.getMillis();
-                        currentTime = now.getTime();
-                        if(time >= currentTime) {
-                            ret = false;
-                            continue;
-                        }
+                SubjectConfirmationData data;
+                do {
+                    if(!iterator.hasNext()) {
+                        return ret;
                     }
 
-                    if(data.getNotOnOrAfter() != null) {
-                        notOnOrAfter = data.getNotOnOrAfter();
-                        time = notOnOrAfter.getMillis();
-                        currentTime = now.getTime();
-                        if(currentTime >= time) {
-                            ret = false;
-                        }
+                    SubjectConfirmation confirmation = (SubjectConfirmation)iterator.next();
+                    data = confirmation.getSubjectConfirmationData();
+                } while(data == null);
+
+                DateTime notOnOrAfter;
+                long time;
+                long currentTime;
+                if(data.getNotBefore() != null) {
+                    notOnOrAfter = data.getNotBefore();
+                    time = notOnOrAfter.getMillis();
+                    currentTime = now.getTime();
+                    if(time >= currentTime) {
+                        ret = false;
+                        continue;
+                    }
+                }
+
+                if(data.getNotOnOrAfter() != null) {
+                    notOnOrAfter = data.getNotOnOrAfter();
+                    time = notOnOrAfter.getMillis();
+                    currentTime = now.getTime();
+                    if(currentTime >= time) {
+                        ret = false;
                     }
                 }
             }
